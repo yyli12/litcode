@@ -124,4 +124,40 @@ class Solution(object):
             pre = ret
         return ret
 
-print Solution().letterCombinations('23324')
+    def longestPalindrome(self, s):
+        """
+        :type s: str
+        :rtype: str
+        """
+        if len(s) <= 1:
+            return s
+
+        ret = ''
+
+        # odd length
+        for center_at in xrange(len(s)):
+            for i in xrange(len(s) / 2 + 1):
+                l = center_at - i
+                r = center_at + i
+                if l >= 0 and r < len(s) and s[l] == s[r]:
+                    if r - l + 1 > len(ret):
+                        ret = s[l:r + 1]
+                else:
+                    break
+
+        for center_at in xrange(len(s)):
+            for i in xrange(len(s) / 2 + 1):
+                l = center_at - i
+                r = center_at + 1 + i
+                if l >= 0 and r < len(s) and s[l] == s[r]:
+                    if r - l + 1 > len(ret):
+                        ret = s[l:r + 1]
+                else:
+                    break
+
+        return ret
+
+
+
+
+print Solution().longestPalindrome('abbac')
