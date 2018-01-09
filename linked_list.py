@@ -11,6 +11,9 @@ class ListNode(object):
             node = node.next
         return ret[:-2]
 
+    def __repr__(self):
+        return str(self)
+
 
 def make_list(val_arr):
     head = ListNode(0)
