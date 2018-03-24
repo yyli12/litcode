@@ -1,5 +1,6 @@
 from linked_list import make_list, ListNode
 from tree import TreeNode
+from utils import *
 
 class Solution(object):
     def twoSum(self, nums, target):
@@ -990,4 +991,69 @@ class Solution(object):
                 string += c
         return string
 
-print Solution().decodeString("2[y]pq4[2[jk]e1[f]]")
+    @timeit
+    def findTheDigits(self, n, d):
+
+        the_digits_count = 1
+        while d >= 10 ** the_digits_count:
+            the_digits_count += 1
+
+        ret = [False] * n
+        higher_digits = 0 if d != 0 else 1
+        while True:
+            existing_higher = False
+            lower_digit_count = 0
+            while True:
+                the_digits = d * 10 ** lower_digit_count
+                existing_lower = False
+                for lower_digits in xrange(10 ** lower_digit_count):
+                    whole_number = higher_digits * 10 ** (the_digits_count + lower_digit_count) + the_digits + lower_digits
+                    if whole_number < n:
+                        existing_lower = True
+                        existing_higher = True
+                        ret[whole_number] = True
+                lower_digit_count += 1
+                if not existing_lower:
+                    break
+            higher_digits += 1
+            if not existing_higher:
+                break
+
+        return ret
+
+    @timeit
+    def findTheDigitsSlow(self, n, d):
+        the_digits_count = 1
+        while d >= 10 ** the_digits_count:
+            the_digits_count += 1
+
+        divisor = 10 ** the_digits_count
+        ret = [False] * n
+        for num in xrange(n):
+            origin_num = num
+            while num:
+                if num % divisor == d:
+                    ret[origin_num] = True
+                    break
+                num /= 10
+        return ret
+
+    def uniquePaths(self, m, n):
+        """
+        :type m: int
+        :type n: int
+        :rtype: int
+        """
+        count = [[0] * n for _ in xrange(m)]
+
+        count[m - 1][n - 1] = 1
+        for row in xrange(m - 1, -1, -1):
+            for col in xrange(n - 1, -1, -1):
+                print row, col
+                if row + 1 < m:
+                    count[row][col] += count[row + 1][col]
+                if col + 1 < n:
+                    count[row][col] += count[row][col + 1]
+        return count[0][0]
+
+print Solution().uniquePaths(1, 2)
