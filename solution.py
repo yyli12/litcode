@@ -1,6 +1,7 @@
 from linked_list import make_list, ListNode
-from tree import TreeNode
+from tree import *
 from utils import *
+from pprint import pprint
 
 class Solution(object):
     def twoSum(self, nums, target):
@@ -1056,4 +1057,1571 @@ class Solution(object):
                     count[row][col] += count[row][col + 1]
         return count[0][0]
 
-print Solution().uniquePaths(1, 2)
+    def calculateMinimumHP(self, dungeon):
+        m, n = len(dungeon), len(dungeon[0])
+        minHP = [[0] * n for _ in xrange(m)]
+
+        minHP[m - 1][n - 1] = max(1 - dungeon[m - 1][n - 1], 1)
+        print minHP
+        for row in xrange(m - 1, -1, -1):
+            for col in xrange(n - 1, -1, -1):
+                minnext = None
+                if row + 1 < m:
+                    minnext = dungeon[row+1][col]
+                if col + 1 < n:
+                    if minnext is None:
+                        minnext = dungeon[row][col+1]
+                    else:
+                        minnext = min(minnext, dungeon[row][col+1])
+                if minnext is None:
+                    continue
+                minHP[row][col] = max(minnext - dungeon[row][col], 1)
+        return minHP[0][0]
+
+    def cherryPickup(self, grid):
+        """
+        :type grid: List[List[int]]
+        :rtype: int
+        """
+        n = len(grid)
+        maxs = [[0] * n for _ in xrange(n)]
+        directions = [[None] * n for _ in xrange(n)]
+
+        maxs[n - 1][n - 1] = grid[n - 1][n - 1]
+        directions[n - 1][n - 1] = (0, 0)
+        for row in xrange(n - 1, -1, -1):
+            for col in xrange(n - 1, -1, -1):
+                if grid[row][col] == -1 or (row, col) == (n, n):
+                    continue
+                maxnext = None
+                direction = None
+                if row + 1 < n and directions[row + 1][col] is not None:
+                    maxnext = maxs[row + 1][col]
+                    direction = (1, 0)
+                if col + 1 < n and directions[row][col + 1] is not None:
+                    if maxnext is None:
+                        maxnext = maxs[row][col + 1]
+                        direction = (0, 1)
+                    else:
+                        if maxs[row][col + 1] > maxnext:
+                            maxnext = maxs[row][col + 1]
+                            direction = (0, 1)
+                if maxnext is not None:
+                    maxs[row][col] = maxnext + grid[row][col]
+                    directions[row][col] = direction
+
+        path = []
+        cur = (0, 0)
+        while directions[cur[0]][cur[1]] and cur != (n - 1, n - 1):
+            path.append(cur)
+            direction = directions[cur[0]][cur[1]]
+            cur = (cur[0] + direction[0], cur[1] + direction[1])
+        if cur == (n - 1, n - 1):
+            path.append(cur)
+        else:
+            return 0
+
+        for cur in path:
+            grid[cur[0]][cur[1]] = 0
+
+        maxs2 = [[0] * n for _ in xrange(n)]
+        for row in xrange(n - 1, -1, -1):
+            for col in xrange(n - 1, -1, -1):
+                if grid[row][col] == -1 or (row, col) == (n, n):
+                    continue
+                maxnext = None
+                if row + 1 < n and grid[row + 1][col] != -1:
+                    maxnext = maxs2[row + 1][col]
+                if col + 1 < n and grid[row][col + 1] != -1:
+                    if maxnext is None:
+                        maxnext = maxs2[row][col + 1]
+                    else:
+                        if maxs2[row][col + 1] > maxnext:
+                            maxnext = maxs2[row][col + 1]
+                if maxnext is not None:
+                    maxs2[row][col] = maxnext + grid[row][col]
+
+        return maxs[0][0] + maxs2[0][0]
+
+    def rotate(self, matrix):
+        """
+        :type matrix: List[List[int]]
+        :rtype: void Do not return anything, modify matrix in-place instead.
+        """
+        n = len(matrix)
+        cn = 1.0 * (n - 1) / 2
+
+        def getRotatedRowCol(r, c):
+            return int(c), int(2 * cn - r)
+
+        for r0 in xrange(int(cn + 1) if n % 2 == 0 else int(cn)):
+            for c0 in xrange(int(cn + 1)):
+                r1, c1 = getRotatedRowCol(r0, c0)
+                r2, c2 = getRotatedRowCol(r1, c1)
+                r3, c3 = getRotatedRowCol(r2, c2)
+                matrix[r0][c0], matrix[r1][c1], matrix[r2][c2], matrix[r3][c3] = \
+                matrix[r3][c3], matrix[r0][c0], matrix[r1][c1], matrix[r2][c2]
+
+    def climbStairs(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        if n <= 1:
+            return 1
+        steps = [1] * (n + 1)
+        for i in xrange(2, n + 1):
+            steps[i] = steps[i - 1] + steps[i - 2]
+        return steps[n]
+
+    def minCostClimbingStairs(self, cost):
+        """
+        :type cost: List[int]
+        :rtype: int
+        """
+        if len(cost) < 2:
+            return min(cost)
+        n = len(cost)
+        mincost = [None] * (n + 1)
+        mincost[0] = 0
+        mincost[1] = 0
+        for i in xrange(2, n + 1):
+            mincost[i] = min(mincost[i - 1] + cost[i - 1], mincost[i - 2] + cost[i - 2])
+        return mincost[-1]
+
+    def isHappy(self, n):
+        """
+        :type n: int
+        :rtype: bool
+        """
+        visited = set()
+        nextnum = n
+        while nextnum != 1 and nextnum not in visited:
+            num = nextnum
+            visited.add(num)
+            nextnum = 0
+            while num:
+                nextnum += (num % 10) ** 2
+                num /= 10
+        return nextnum == 1
+
+    def isUgly(self, num):
+        """
+        :type num: int
+        :rtype: bool
+        """
+
+        for divisor in [2, 3, 5]:
+            while num % divisor == 0:
+                num /= divisor
+
+        return num == 1
+
+    def nthUglyNumber(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        nums = [1]
+        nexts = [2 << 31, 2 << 31, 2, 3, 2 << 31, 5]
+        idx = [0, 0, 0, 0, 0, 0]
+        while len(nums) < n:
+            factor = nexts.index(min(nexts))
+            if nums[-1] != nexts[factor]:
+                nums.append(nexts[factor])
+            idx[factor] += 1
+            nexts[factor] = nums[idx[factor]] * factor
+        return nums[-1]
+
+    def multiply(self, num1, num2):
+        """
+        :type num1: str
+        :type num2: str
+        :rtype: str
+        """
+        def _add_nums(nums):
+            maxlen = max(map(len, nums))
+            carry = 0
+            ds = []
+            for i in xrange(maxlen):
+                n = carry
+                for num in nums:
+                    if i < len(num):
+                        n += num[i]
+                ds.append(n % 10)
+                carry = n / 10
+            while carry:
+                ds.append(carry % 10)
+                carry /= 10
+            ds = ds[::-1]
+            non_zero = 0
+            while non_zero < len(ds) and ds[non_zero] == 0:
+                non_zero += 1
+            ds = ds[non_zero:]
+            if not ds:
+                return '0'
+            return ''.join(map(str, ds))
+
+        def _digit_multi(d1, num, zeros):
+            ret = [0] * zeros
+            carry = 0
+            for d2 in num:
+                n = (ord(d2) - ord('0')) * (ord(d1) - ord('0')) + carry
+                ret.append(n % 10)
+                carry = n / 10
+            while carry:
+                ret.append(carry % 10)
+                carry /= 10
+            return ret
+        if num1 < num2:
+            num1, num2 = num1, num2
+        n1 = list(num1[::-1])
+        n2 = list(num2[::-1])
+        addons = []
+        for i in xrange(len(n1)):
+            addons.append(_digit_multi(n1[i], n2, i))
+        return _add_nums(addons)
+
+    def generate(self, numRows):
+        """
+        :type numRows: int
+        :rtype: List[List[int]]
+        """
+        ret = []
+        for i in xrange(numRows):
+            if i == 0:
+                ret.append([1])
+            else:
+                row = []
+                for j in xrange(i + 1):
+                    if j == 0 or j == i:
+                        row.append(1)
+                    else:
+                        row.append(ret[i-1][j-1] + ret[i-1][j])
+                ret.append(row)
+        return ret
+
+    def findMin(self, nums):
+        """
+        :type nums: List[int] - an array sorted in ascending order is rotated at some pivot
+        :rtype: int
+        """
+        def _find(nums):
+            if len(nums) <= 2:
+                return min(nums)
+            midi = len(nums) / 2
+            mid = nums[midi]
+            if nums[0] <= mid <= nums[-1]:
+                return nums[0]
+            print nums[:midi+1]
+            if nums[0] > mid:
+                return _find(nums[:midi+1])
+            else:
+                return _find(nums[midi:])
+
+        return _find(nums)
+
+    def increasingTriplet(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: bool
+        """
+        if len(nums) < 3:
+            return False
+        small1 = 1 << 32
+        small2 = 1 << 32
+        for num in nums:
+            print small1, small2, num
+            if num <= small1:
+                small1 = num
+            elif num <= small2:
+                small2 = num
+            else:
+                return True
+        return False
+
+    def addBinary(self, a, b):
+        """
+        :type a: str
+        :type b: str
+        :rtype: str
+        """
+        ra = a[::-1]
+        rb = b[::-1]
+        rret = ''
+
+        carry = 0
+        for i in xrange(max(len(ra), len(rb))):
+            d = carry
+            if i < len(ra):
+                d += int(ra[i])
+            if i < len(rb):
+                d += int(rb[i])
+            carry = (d & 2) >> 1
+            d &= 1
+            rret += str(d)
+        if carry:
+            rret += str(carry)
+
+        return rret[::-1]
+
+    def largestDivisibleSubset(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[int]
+        """
+        if not nums:
+            return []
+
+        def get_longest(son_nodes, i):
+            def _get_longest(i):
+                if i not in memo:
+                    if i not in son_nodes or not son_nodes[i]:
+                        memo[i] = [i, ]
+                    else:
+                        memo[i] = [i, ] + sorted((_get_longest(s) for s in son_nodes[i]), key=len, reverse=True)[0]
+                return memo[i]
+            memo = {}
+            return _get_longest(i)
+
+        nums.sort()
+        has_one = nums[0] == 1
+        if has_one:
+            nums = nums[1:]
+        son_nodes = {
+            1: set(),
+        }
+        for num in nums:
+            direct_ancestors = {1, }
+            changed = True
+            while changed:
+                changed = False
+                next_level_ancestors = set()
+                for ancestor in direct_ancestors:
+                    no_next_level_son = True
+                    if ancestor in son_nodes:
+                        for son in son_nodes[ancestor]:
+                            if num % son == 0:
+                                next_level_ancestors.add(son)
+                                changed = True
+                                no_next_level_son = False
+                    if no_next_level_son:
+                        next_level_ancestors.add(ancestor)
+                direct_ancestors = next_level_ancestors
+
+            for ancestor in direct_ancestors:
+                son_nodes.setdefault(ancestor, set()).add(num)
+
+        if has_one:
+            return get_longest(son_nodes, 1)
+        else:
+            return get_longest(son_nodes, 1)[1:]
+
+    def maxIncreaseKeepingSkyline(self, grid):
+        """
+        :type grid: List[List[int]]
+        :rtype: int
+        """
+        if not grid or not grid[0]:
+            return 0
+
+        rowmax = map(max, grid)
+        colmax = map(max, ([row[col] for row in grid] for col in xrange(len(grid[0]))))
+
+        ret = 0
+        for row in xrange(len(grid)):
+            for col in xrange(len(grid[0])):
+                ret += grid[row][col] - min(rowmax[row], colmax[col])
+        return ret
+
+    def findCircleNum(self, M):
+        """
+        :type M: List[List[int]]
+        :rtype: int
+        """
+        def disjointSet(M):
+            def get_root(i):
+                if groups[i] != i:
+                    groups[i] = get_root(groups[i])
+                return groups[i]
+
+            n = len(M)
+            groups = [i for i in xrange(n)]
+
+            for i in xrange(n):
+                for j in xrange(i):
+                    if M[i][j]:
+                        groups[get_root(j)] = get_root(i)
+            return len(set(get_root(i) for i in xrange(n)))
+
+        def graph(M):
+            visited = set()
+            n = len(M)
+            r = 0
+
+            for i in xrange(n):
+                if i not in visited:
+                    r += 1
+                    l = [i, ]
+                    while l:
+                        cur = l.pop(0)
+                        visited.add(cur)
+                        for nb in filter(lambda x: M[cur][x] == 1, xrange(n)):
+                            if nb not in visited:
+                                l.append(nb)
+
+            return r
+
+        return graph(M)
+
+    def findMedianSortedArrays(self, nums1, nums2):
+        """
+        :type nums1: List[int]
+        :type nums2: List[int]
+        :rtype: float
+        """
+        def findKth(nums1, nums2):
+            pass
+
+    def lengthOfLIS(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+
+        n = len(nums)
+        if n <= 1:
+            return n
+
+        lis_len = [1] * n
+
+        for i in xrange(n):
+            max_len = 0
+            for j in xrange(i - 1, -1, -1):
+                if nums[j] < nums[i] and lis_len[j] > max_len:
+                    max_len = lis_len[j]
+                lis_len[i] = 1 + max_len
+        return max(lis_len)
+
+    def twoSum2(self, numbers, target):
+        """
+        :type numbers: List[int]
+        :type target: int
+        :rtype: List[int]
+        """
+        n = len(numbers)
+        if n <= 2:
+            return
+        i, j = 0, n - 1
+        s = numbers[i] + numbers[j]
+        while s != target:
+            if s > target:
+                j -= 1
+            else:
+                i += 1
+            s = numbers[i] + numbers[j]
+        return [i+1, j+1]
+
+    def searchMatrix(self, matrix, target):
+        """
+        :type matrix: List[List[int]]
+        :type target: int
+        :rtype: bool
+        """
+
+        def sol1(matrix, target):
+            m = len(matrix)
+            if m <= 0:
+                return False
+            n = len(matrix[0])
+            if n <= 0:
+                return False
+
+            r, c = 0, n - 1
+
+            while r < m and c > 0:
+                print matrix[r][c]
+                if matrix[r][c] == target:
+                    return True
+                elif matrix[r][c] < target:
+                    # too small -> not in this row
+                    r += 1
+                else:
+                    # too large -> not in this col
+                    c -= 1
+            return False
+
+        def sol2(matrix, target):
+            m = len(matrix)
+            if m <= 0:
+                return False
+            n = len(matrix[0])
+            if n <= 0:
+                return False
+
+            q = [(m / 2, n / 2), ]
+            i = 0
+            visited = set()
+            while i < len(q):
+                r, c = q[i]
+                if 0 <= r < m and 0 <= c < n and (r, c) not in visited:
+                    visited.add((r, c))
+                    v = matrix[r][c]
+                    if v == target:
+                        return True
+                    elif v > target:
+                        q.append((r - 1, c))
+                        q.append((r, c - 1))
+                    else:
+                        q.append((r + 1, c))
+                        q.append((r, c + 1))
+                i += 1
+            return False
+
+        return sol2(matrix, target)
+
+    def leet581(self, nums):
+
+        n = len(nums)
+        if n <= 0:
+            return 0
+
+        sorted_nums = sorted(nums)
+        l = 0
+        r = n - 1
+        while l < n and nums[l] == sorted_nums[l]:
+            l += 1
+        while r >= 0 and nums[r] == sorted_nums[r]:
+            r -= 1
+        return r - l + 1
+
+    def rob2(self, nums):
+        n = len(nums)
+        if n <= 0:
+            return 0
+        if n <= 3:
+            # only rob one
+            return max(nums)
+
+        def easyrob(nums):
+            n = len(nums)
+            if n <= 0:
+                return 0
+            if n <= 2:
+                return max(nums)
+            max_with = [0] * n
+            max_wout = [0] * n
+            max_with[0] = nums[0]
+
+            for i in xrange(1, n):
+                max_with[i] = max_wout[i-1] + nums[i]
+                max_wout[i] = max(max_with[i-1], max_wout[i-1])
+
+            return max(max(max_wout), max(max_with))
+
+        return max(nums[0] + easyrob(nums[2:-1]), easyrob(nums[1:]))
+
+    def rob3(self, root):
+        """
+        :type root: TreeNode
+        :rtype: int
+        """
+
+        def rob(root):
+            if not root:
+                return 0, 0
+            else:
+                w_left, wo_left = rob(root.left)
+                w_rite, wo_rite = rob(root.right)
+                return root.val + wo_left + wo_rite, max(w_left, wo_left) + max(w_rite, wo_rite)
+
+        return max(rob(root))
+
+
+    def findKthLargest(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: int
+        """
+
+        def sol1_heap(nums, k):
+            class Heap(object):
+                def __init__(self):
+                    self.heap = []
+
+                @property
+                def size(self):
+                    return len(self.heap)
+
+                def insert(self, val):
+                    self.heap.append(val)
+                    self.go_up(len(self.heap) - 1)
+
+                def get_top(self):
+                    return self.heap[0]
+
+                def pop_top(self):
+                    top = self.heap[0]
+                    self.heap[0] = self.heap[-1]
+                    self.heap.pop()
+                    if self.heap:
+                        self.go_down(0)
+                    return top
+
+                def replace_top(self, val):
+                    self.heap[0] = val
+                    self.go_down(0)
+
+                def go_up(self, i):
+                    parent = (i - 1) / 2
+                    if parent < 0 or self.heap[parent] < self.heap[i]:
+                        return
+                    self.heap[parent], self.heap[i] = self.heap[i], self.heap[parent]
+                    self.go_up(parent)
+
+                def go_down(self, i):
+                    sson = i
+                    s1 = 2 * i + 1
+                    if s1 < len(self.heap):
+                        if self.heap[sson] > self.heap[s1]:
+                            sson = s1
+                        s2 = 2 * i + 2
+                        if s2 < len(self.heap):
+                            if self.heap[sson] > self.heap[s2]:
+                                sson = s2
+                    if sson != i:
+                        self.heap[sson], self.heap[i] = self.heap[i], self.heap[sson]
+                        self.go_down(sson)
+
+            h = Heap()
+            for num in nums:
+                if h.size < k:
+                    h.insert(num)
+                else:
+                    if num > h.get_top():
+                        h.replace_top(num)
+
+            return h.get_top()
+
+        def sol2_recursion(nums, k):
+            def find(nums, k):
+                # s s s p p p l l l
+                #
+                #         ----k----
+                pivot = nums[len(nums) / 2]
+                smaller = []
+                larger = []
+                equal = 0
+                for num in nums:
+                    if num < pivot:
+                        smaller.append(num)
+                    elif num > pivot:
+                        larger.append(num)
+                    else:
+                        equal += 1
+                if len(larger) + 1 <= k <= len(larger) + equal:
+                    return pivot
+                elif k <= len(larger):
+                    return find(larger, k)
+                else:
+                    return find(smaller, k - (len(larger) + equal))
+            return find(nums, k)
+
+    def topKFrequent2(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: List[int]
+        """
+
+        class Heap(object):
+            def __init__(self):
+                self.heap = []
+
+            @property
+            def size(self):
+                return len(self.heap)
+
+            def insert(self, val):
+                self.heap.append(val)
+                self.go_up(len(self.heap) - 1)
+
+            def get_top(self):
+                return self.heap[0]
+
+            def pop_top(self):
+                top = self.heap[0]
+                self.heap[0] = self.heap[-1]
+                self.heap.pop()
+                if self.heap:
+                    self.go_down(0)
+                return top
+
+            def replace_top(self, val):
+                self.heap[0] = val
+                self.go_down(0)
+
+            def go_up(self, i):
+                parent = (i - 1) / 2
+                if parent < 0 or self.heap[parent] < self.heap[i]:
+                    return
+                self.heap[parent], self.heap[i] = self.heap[i], self.heap[parent]
+                self.go_up(parent)
+
+            def go_down(self, i):
+                sson = i
+                s1 = 2 * i + 1
+                if s1 < len(self.heap):
+                    if self.heap[sson] > self.heap[s1]:
+                        sson = s1
+                    s2 = 2 * i + 2
+                    if s2 < len(self.heap):
+                        if self.heap[sson] > self.heap[s2]:
+                            sson = s2
+                if sson != i:
+                    self.heap[sson], self.heap[i] = self.heap[i], self.heap[sson]
+                    self.go_down(sson)
+
+        count = {}
+        for num in nums:
+            if num in count:
+                count[num] += 1
+            else:
+                count[num] = 1
+
+        h = Heap()
+        for num, c in count.iteritems():
+            if h.size < k:
+                h.insert((c, num))
+            else:
+                if c > h.get_top()[0]:
+                    h.replace_top((c, num))
+
+        ret = []
+        while h.size:
+            ret.append(h.pop_top()[1])
+        return ret
+
+    def findDuplicate(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        n = len(nums) - 1
+        low = 1
+        high = n + 1
+        while high - low > 1:
+            # candidate inside [low, high)
+            # 1, 2, 3, 4, 4, 5
+            candidate = (low + high) / 2
+            print low, high, candidate
+            smaller = 0
+            equal = 0
+            for num in nums:
+                if num < candidate:
+                    smaller += 1
+                if num == candidate:
+                    equal += 1
+                    if equal > 1:
+                        return candidate
+            print smaller, candidate
+            if smaller > candidate - 1:
+                # new range: [low, candidate)
+                high = candidate
+            else:
+                # new range: [candidate + 1, high)
+                low = candidate + 1
+        return low
+
+    def firstMissingPositive(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        if not nums:
+            return 1
+        nums.append(nums[0])
+        i = 1
+        while i < len(nums):
+            while 0 < nums[i] < len(nums) and i != nums[i] and nums[nums[i]] != nums[i]:
+                nums[nums[i]], nums[i] = nums[i], nums[nums[i]]
+            i += 1
+        i = 1
+        while i < len(nums) and nums[i] == i:
+            i += 1
+        return i
+
+    def findDisappearedNumbers(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[int]
+        """
+        if not nums:
+            return []
+
+        n = len(nums)
+        nums.append(nums[0])
+        for i in xrange(1, n+1):
+            while i != nums[i] and nums[i] != nums[nums[i]]:
+                nums[nums[i]], nums[i] = nums[i], nums[nums[i]]
+
+        return filter(lambda i: nums[i] != i, xrange(1, n+1))
+
+    def findDuplicates(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[int]
+        """
+        if not nums:
+            return []
+
+        n = len(nums)
+        nums.append(nums[0])
+
+        ret = set()
+        for i in xrange(1, n + 1):
+            while i != nums[i] and nums[i] != nums[nums[i]]:
+                nums[nums[i]], nums[i] = nums[i], nums[nums[i]]
+            if i != nums[i] and nums[i] == nums[nums[i]]:
+                ret.add(nums[i])
+        return list(ret)
+
+    def minSwapsCouples(self, row):
+        """
+        :type row: List[int]
+        :rtype: int
+        """
+
+        def areCouple(p, q):
+            return p / 2 == q / 2
+
+        def getCouple(p):
+            return p - 1 if p & 1 else p + 1
+
+        n = len(row)
+        neighbors = {}
+        for i in xrange(0, n, 2):
+            neighbors[row[i]] = row[i + 1]
+            neighbors[row[i + 1]] = row[i]
+
+        ret = 0
+        checked = set()
+        for i in xrange(0, n, 2):
+            if row[i] in checked:
+                continue
+            checked.add(row[i])
+            checked.add(row[i+1])
+            couples = 1
+            seed = row[i]
+            this_half = row[i+1]
+            close_loop = areCouple(seed, this_half)
+            while not close_loop:
+                other_half = getCouple(this_half)
+                this_half = neighbors[other_half]
+                checked.add(other_half)
+                checked.add(this_half)
+                couples += 1
+                close_loop = areCouple(seed, this_half)
+            ret += couples - 1
+        return ret
+
+    def numSquares(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        def sol1(n):
+            dp = range(n + 1)
+            for num in xrange(1, n+1):
+                i = 1
+                while i * i <= num:
+                    dp[num] = min(dp[num], 1 + dp[num - i * i])
+                    i += 1
+            return dp[n]
+
+        def sol2(n):
+            dp = [0]
+            while len(dp) <= n + 1:
+                num = len(dp)
+                cnt = num
+                i = 1
+                while i * i <= num:
+                    cnt = min(cnt, 1 + dp[num - i * i])
+                    i += 1
+                dp.append(cnt)
+            return dp[n]
+
+        return sol2(n)
+
+    def isValidSudoku(self, board):
+        """
+        :type board: List[List[str]]
+        :rtype: bool
+        """
+        check_points = []
+        cross1 = []
+        cross2 = []
+        for i in xrange(9):
+            check_points.append((board[i], 'r%s' % i))  # rows
+            check_points.append(([row[i] for row in board], 'c%s' % i))  # cols
+
+            blocks = []
+            r, c = i / 3 * 3, i % 3 * 3
+            for delta_r in xrange(3):
+                for delta_c in xrange(3):
+                    blocks.append(board[r + delta_r][c + delta_c])
+            check_points.append((blocks, 'b%s' % i))  # block
+
+            # make cross
+            cross1.append(board[i][i])
+            cross2.append(board[8 - i][i])
+
+        check_points.append((cross1, 'x1'))
+        check_points.append((cross2, 'x2'))
+
+        pprint(board)
+
+        def check((nums, name)):
+            shown = set()
+            for num in nums:
+                if num in shown:
+                    print nums, name
+                    return False
+                elif ord('0') <= ord(num) <= ord('9'):
+                    shown.add(num)
+            return True
+
+        return all(check(check_point) for check_point in check_points)
+
+    def solveSudoku(self, board):
+        """
+        :type board: List[List[str]]
+        :rtype: void Do not return anything, modify board in-place instead.
+        """
+        rows = [set() for i in xrange(9)]
+        cols = [set() for i in xrange(9)]
+        blks = [set() for i in xrange(9)]
+
+        def add(r, c, num):
+            rows[r].add(num)
+            cols[c].add(num)
+            blks[r / 3 * 3 + c / 3].add(num)
+
+        def remove(r, c, num):
+            rows[r].remove(num)
+            cols[c].remove(num)
+            blks[r / 3 * 3 + c / 3].remove(num)
+
+        for i, row in enumerate(board):
+            for j, num in enumerate(row):
+                if ord('0') <= ord(num) <= ord('9'):
+                    add(i, j, int(num))
+
+        set9 = set(xrange(1, 10))
+        pprint(board)
+        def solve():
+            options = None
+            r, c = None, None
+            for i in xrange(9):
+                for j in xrange(9):
+                    if board[i][j] == '.':
+                        new_options = set9 - (rows[i].union(cols[j]).union(blks[i / 3 * 3 + j / 3]))
+                        if options is None or len(new_options) < len(options):
+                            options = new_options
+                            r, c = i, j
+            if options is None:
+                return True
+
+            for option in options:
+                board[r][c] = str(option)
+                add(r, c, option)
+                if solve():
+                    return True
+                remove(r, c, option)
+                board[r][c] = '.'
+            return False
+
+        solve()
+        pprint(board)
+
+    def longestIncreasingPath(self, matrix):
+        """
+        :type matrix: List[List[int]]
+        :rtype: int
+        """
+        if not matrix or not matrix[0]:
+            return 0
+
+        vals = []
+        for r, row in enumerate(matrix):
+            for c, val in enumerate(row):
+                vals.append((val, r, c))
+
+        vals.sort()
+
+        m, n = len(matrix), len(matrix[0])
+        dp = [[1] * n for _ in xrange(m)]
+
+        for val, r, c in vals:
+            prefix = 0
+            if r - 1 >= 0 and matrix[r - 1][c] < val and dp[r - 1][c] > prefix:
+                prefix = dp[r - 1][c]
+            if c - 1 >= 0 and matrix[r][c - 1] < val and dp[r][c - 1] > prefix:
+                prefix = dp[r][c - 1]
+            if r + 1 <  m and matrix[r + 1][c] < val and dp[r + 1][c] > prefix:
+                prefix = dp[r + 1][c]
+            if c + 1 <  n and matrix[r][c + 1] < val and dp[r][c + 1] > prefix:
+                prefix = dp[r][c + 1]
+            dp[r][c] = prefix + 1
+
+        return max(map(max, dp))
+
+    def trap(self, height):
+        """
+        :type height: List[int]
+        :rtype: int
+        """
+        if not height:
+            return 0
+
+        def easytrap(height):
+            # guarantee rightmost has maximum height
+            print height
+            if len(height) <= 1:
+                return 0
+
+            ret = 0
+
+            left = 0
+            while left != len(height) - 1:
+                right = left + 1
+                while height[right] < height[left]:
+                    ret += height[left] - height[right]
+                    right += 1
+                left = right
+
+            return ret
+
+        peak = max((h, i) for i, h in enumerate(height))[1]
+
+        return easytrap(height[:peak+1]) + easytrap(height[peak:][::-1])
+
+    def gameOfLife(self, board):
+        """
+        :type board: List[List[int]]
+        :rtype: void Do not return anything, modify board in-place instead.
+        """
+        if not board or not board[0]:
+            return
+
+        m, n = len(board), len(board[0])
+
+        def count(i, j):
+            lives = 0
+            deaths = 0
+            neighbors = [
+                (i - 1, j),
+                (i + 1, j),
+                (i, j - 1),
+                (i, j + 1),
+                (i - 1, j - 1),
+                (i - 1, j + 1),
+                (i + 1, j - 1),
+                (i + 1, j + 1),
+            ]
+            for nr, nc in neighbors:
+                if 0 <= nr < m and 0 <= nc < n:
+                    lives += board[nr][nc] & 1
+                    deaths += 1 - board[nr][nc] & 1
+            return lives, deaths
+
+        for r in xrange(m):
+            for c in xrange(n):
+                lives, deaths = count(r, c)
+                if board[r][c]:
+                    if not (lives != 2 and lives != 3):
+                        board[r][c] |= 1 << 1
+                else:
+                    if lives == 3:
+                        board[r][c] |= 1 << 1
+
+        for r in xrange(m):
+            for c in xrange(n):
+                board[r][c] >>= 1
+
+    def trailingZeroes(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        factor = 5
+        ret = []
+        while factor <= n:
+            ret.append(n / factor)
+            factor *= 5
+        return ret, sum(ret)
+
+    def preimageSizeFZF(self, K):
+        """
+        :type K: int
+        :rtype: int
+        """
+        def zeros(n):
+            factor = 5
+            ret = 0
+            while factor <= n:
+                ret += n / factor
+                factor *= 5
+            return ret
+
+        left = 1
+        right = K * 5
+        while left < right:
+            mid = (left + right) / 2
+            if zeros(mid) < K:
+                left = mid + 1
+            else:
+                right = mid
+
+        if zeros(left) != K:
+            return 0
+        return 5
+
+
+    def countAndSay(self, n):
+        """
+        :type n: int
+        :rtype: str
+        """
+
+        i = 2
+        prev = '1'
+        while i <= n:
+            nxt = ''
+            char = prev[0]
+            cnt = 1
+            for c in prev[1:]:
+                if c == char:
+                    cnt += 1
+                else:
+                    nxt += '%s%s' % (cnt, char)
+                    char = c
+                    cnt = 1
+            nxt += '%s%s' % (cnt, char)
+            prev = nxt
+            i += 1
+        return prev
+
+    def zigzagLevelOrder(self, root):
+        """
+        :type root: TreeNode
+        :rtype: List[List[int]]
+        """
+        nextlevel = [root, ]
+        level = 0
+        ret = []
+        while True:
+            if not nextlevel:
+                break
+            ret.append([])
+            currlevel = nextlevel
+            nextlevel = []
+
+            while currlevel:
+                node = currlevel.pop()
+                ret[level].append(node.val)
+                if level & 1 == 0:
+                    if node.left:
+                        nextlevel.append(node.left)
+                    if node.right:
+                        nextlevel.append(node.right)
+                else:
+                    if node.right:
+                        nextlevel.append(node.right)
+                    if node.left:
+                        nextlevel.append(node.left)
+            level += 1
+
+        return ret
+
+    def connect(self, root):
+        def make_next(root, sibling):
+            if not root:
+                return
+            root.next = sibling
+            make_next(root.left, root.right)
+            make_next(root.right, root.next.left if root.next else None)
+
+        make_next(root, None)
+
+    def numIslands(self, grid):
+        """
+        :type grid: List[List[str]]
+        :rtype: int
+        """
+        if not grid or not grid[0]:
+            return 0
+
+        R, C = len(grid), len(grid[0])
+
+        def dfs(r, c):
+            grid[r][c] = 0
+            if r - 1 >= 0 and grid[r - 1][c] == '1':
+                dfs(r - 1, c)
+            if r + 1 <  R and grid[r + 1][c] == '1':
+                dfs(r + 1, c)
+            if c - 1 >= 0 and grid[r][c - 1] == '1':
+                dfs(r, c - 1)
+            if c + 1 <  C and grid[r][c + 1] == '1':
+                dfs(r, c + 1)
+
+        ret = 0
+        for r in xrange(R):
+            for c in xrange(C):
+                if grid[r][c] == '1':
+                    ret += 1
+                    dfs(r, c)
+
+        return ret
+
+    def longestSubstring(self, s, k):
+        """
+        :type s: str
+        :type k: int
+        :rtype: int
+        """
+        if k <= 1:
+            return s
+
+        def longest(s):
+            print s
+            if not s:
+                return 0
+
+            count = {}
+            for c in s:
+                if c not in count:
+                    count[c] = 0
+                count[c] += 1
+
+            if min(count.values()) >= k:
+                return len(s)
+
+            start = 0
+            ret = 0
+            for i in xrange(len(s)):
+                if count[s[i]] < k:
+                    ret = max(ret, longest(s[start:i]))
+                    start = i + 1
+            ret = max(ret, longest(s[start:]))
+            return ret
+
+        return longest(s)
+
+    def serialize(self, root):
+        """Encodes a tree to a single string.
+
+        :type root: TreeNode
+        :rtype: str
+        """
+        nodes = []
+        nextlevel = [root, ]
+        while nextlevel:
+            thislevel, nextlevel = nextlevel, []
+            for node in thislevel:
+                if node is None:
+                    nodes.append(node)
+                else:
+                    nodes.append(node.val)
+                    nextlevel.append(node.left)
+                    nextlevel.append(node.right)
+        tail = len(nodes) - 1
+        while tail >= 0 and nodes[tail] is None:
+            tail -= 1
+        return str(nodes[:tail + 1])
+
+    def deserialize(self, data):
+        """Decodes your encoded data to tree.
+
+        :type data: str
+        :rtype: TreeNode
+        """
+        nodes = eval(data)
+        if not nodes:
+            return None
+
+        root = TreeNode(nodes[0])
+        queue = [root, ]
+        for i in xrange(1, len(nodes)):
+            if nodes[i] is None:
+                node = None
+            else:
+                node = TreeNode(nodes[i])
+                queue.append(node)
+            parent = queue[(i - 1) / 2]
+            if i & 1 == 0:
+                parent.right = node
+            else:
+                parent.left = node
+        return root
+
+    def countSmaller(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[int]
+        """
+        if not nums:
+            return []
+
+        n = len(nums)
+        ret = [0] * n
+
+        def mergeSortWithCount(nums):
+            mid = len(nums) / 2
+            if mid <= 0:
+                return nums
+            leftpart, rightpart = mergeSortWithCount(nums[:mid]), mergeSortWithCount(nums[mid:])
+            rightsmaller = 0
+            result = []
+            leftiter, rightiter = 0, 0
+            while leftiter < len(leftpart) and rightiter < len(rightpart):
+                if rightpart[rightiter] < leftpart[leftiter]:
+                    rightsmaller += 1
+                    result.append(rightpart[rightiter])
+                    rightiter += 1
+                else:
+                    ret[leftpart[leftiter][1]] += rightsmaller
+                    result.append(leftpart[leftiter])
+                    leftiter += 1
+
+            while rightiter < len(rightpart):
+                rightsmaller += 1
+                result.append(rightpart[rightiter])
+                rightiter += 1
+
+            while leftiter < len(leftpart):
+                ret[leftpart[leftiter][1]] += rightsmaller
+                result.append(leftpart[leftiter])
+                leftiter += 1
+            return result
+
+        mergeSortWithCount([(val, index) for index, val in enumerate(nums)])
+        return ret
+
+    def swimInWater(self, grid):
+        """
+        :type grid: List[List[int]]
+        :rtype: int
+        """
+        if not grid:
+            return 0
+
+        n = len(grid)
+
+        def bfs(limit):
+            visited = [[False] * n for i in xrange(n)]
+            queue = [(0, 0), ]
+            index = 0
+            while index < len(queue):
+                r, c = queue[index]
+                if not visited[r][c]:
+                    if grid[r][c] <= limit:
+                        if r == n - 1 and c == n - 1:
+                            return True
+                        visited[r][c] = True
+                        if r - 1 >= 0:
+                            queue.append((r - 1, c))
+                        if r + 1 <  n:
+                            queue.append((r + 1, c))
+                        if c - 1 >= 0:
+                            queue.append((r, c - 1))
+                        if c + 1 <  n:
+                            queue.append((r, c + 1))
+                index += 1
+            return False
+
+        left = 2 * n - 2
+        right = n * n - 1
+        while left < right:
+            mid = (left + right) / 2
+            if bfs(mid):
+                right = mid
+            else:
+                left = mid + 1
+        return left
+
+    def findRedundantConnection(self, edges):
+        """
+        :type edges: List[List[int]]
+        :rtype: List[int]
+        """
+        n = len(edges)
+        if n <= 3:
+            return
+
+        disjoint_set = range(n + 1)
+        def get_root(i):
+            if i != disjoint_set[i]:
+                disjoint_set[i] = get_root(disjoint_set[i])
+            return disjoint_set[i]
+
+        for u, v in edges:
+            if get_root(u) == get_root(v):
+                return [min(u, v), max(u, v)]
+            else:
+                disjoint_set[get_root(v)] = get_root(u)
+
+    def findRedundantDirectedConnection(self, edges):
+        """
+        :type edges: List[List[int]]
+        :rtype: List[int]
+        """
+        n = len(edges)
+
+
+        visited = set()
+        edge_table = [[] for _ in xrange(n + 1)]
+        in_edge = [[] for _ in xrange(n + 1)]
+
+        for u, v in edges:
+            edge_table[u].append(v)
+            in_edge[v].append(u)
+
+        def check_connectivity_without(exclude_edge):
+            groups = [i for i in xrange(n + 1)]
+
+            def get_root(i):
+                if groups[i] != i:
+                    groups[i] = get_root(groups[i])
+                return groups[i]
+
+            for u, v in edges:
+                if [u, v] != exclude_edge:
+                    groups[get_root(u)] = get_root(v)
+            return len(set(get_root(i) for i in xrange(1, n + 1))) == 1
+
+        for v in xrange(1, n + 1):
+            if len(in_edge[v]) == 2:
+                u1, u2 = in_edge[v]
+                if not check_connectivity_without([u1, v]):
+                    return [u2, v]
+                elif not check_connectivity_without([u2, v]):
+                    return [u1, v]
+                else:
+                    return [u2, v]
+
+        def detect_loop(u, head, prefix):
+
+            if u == head:
+                return [prefix, u]
+
+            for v in edge_table[u]:
+                visited.add((u, v))
+                last_edge = detect_loop(v, head, u)
+                if last_edge:
+                    return last_edge
+            return False
+
+        for u, v in edges:
+            if (u, v) not in visited:
+                last_edge = detect_loop(v, u, u)
+                if last_edge:
+                    return last_edge
+
+    def nextGreatestLetter(self, letters, target):
+        """
+        :type letters: List[str]
+        :type target: str
+        :rtype: str
+        """
+        if not (letters[0] <= target < letters[-1]):
+            return letters[0]
+
+        left = 0
+        right = len(letters)
+        while left < right:
+            mid = (left + right) / 2
+            if letters[mid] <= target:
+                left = mid + 1
+            else:
+                right = mid
+        return letters[left]
+
+    def countDigitOne(self, n):
+        """
+        :type n: int
+        :rtype: int
+        """
+        digit = 0
+        ret = 0
+        ones = True
+        num = 0
+        while ones:
+            append = 8 * 10 ** digit + 1
+            digit += 1
+            ones = int(1.0 * (n + append) / 10 ** digit)
+            print ones
+
+            ret += ones
+        return ret
+
+
+
+    def partition(self, s):
+        """
+        :type s: str
+        :rtype: List[List[str]]
+        """
+
+        def getAllPalindromes(s):
+            n = len(s)
+            palindromes = [[] for i in xrange(n)]
+            for i, center in enumerate(s):
+                l = 0
+                while True:
+                    # odd length
+                    start_i = i - l
+                    end_i = i + l
+                    if start_i >= 0 and end_i < n and s[start_i] == s[end_i]:
+                        palindromes[start_i].append(end_i + 1)
+                        # print 'odd ', s[start_i:end_i + 1]
+                        l += 1
+                    else:
+                        break
+                l = 0
+                while True:
+                    # even length
+                    start_i = i - l
+                    end_i = i + 1 + l
+                    if start_i >= 0 and end_i < n and s[start_i] == s[end_i]:
+                        palindromes[start_i].append(end_i + 1)
+                        # print 'even', s[start_i:end_i + 1]
+                        l += 1
+                    else:
+                        break
+            return palindromes
+
+        def partitionString(s, start_i, palindromes):
+            if start_i >= len(s):
+                return [[]]
+            ret = []
+            for end_i in palindromes[start_i]:
+                palindrome = s[start_i:end_i]
+                for subpartition in partitionString(s, end_i, palindromes):
+                    ret.append([palindrome, ] + subpartition)
+            return ret
+
+        return partitionString(s, 0, getAllPalindromes(s))
+
+
+print Solution().partition('abbabccba')
+
+# root = TreeNode(3)
+# root.left = TreeNode(9)
+# root.right = TreeNode(20)
+# root.left.right = TreeNode(2)
+# root.right.right = TreeNode(7)
+
+
+# print Solution().deserialize(Solution().serialize(root))
