@@ -1,3 +1,4 @@
+# coding=utf-8
 from linked_list import make_list, ListNode
 from tree import *
 from utils import *
@@ -2965,6 +2966,121 @@ class Solution(object):
         tail_of_first_part.next = reverseList(H2.next)
 
         return True
+
+    def maxSlidingWindow(self, nums, k):
+        """
+        :type nums: List[int]
+        :type k: int
+        :rtype: List[int]
+        """
+        import heapq
+
+        n = len(nums)
+        if not n:
+            return []
+        if k == 1:
+            return nums
+
+        ret = []
+        window = [(-nums[i], i) for i in xrange(k)]
+        heapq.heapify(window)
+        ret.append(-window[0][0])
+
+        for i in xrange(k, n):
+            heapq.heappush(window, (-nums[i], i))
+            left = i - k
+            topv, topi = window[0]
+            while topi <= left:
+                heapq.heappop(window)
+                topv, topi = window[0]
+            ret.append(-topv)
+        return ret
+
+    def maxSlidingWindow2(self, nums, k):
+        import collections
+
+        if not nums:
+            return []
+
+        max_candidate_indexes_within_window = collections.deque()
+        ret = []
+        for i, v in enumerate(nums):
+            while max_candidate_indexes_within_window and nums[max_candidate_indexes_within_window[-1]] < v:
+                max_candidate_indexes_within_window.pop()
+            max_candidate_indexes_within_window.append(i)
+            while max_candidate_indexes_within_window and max_candidate_indexes_within_window[0] <= i - k:
+                max_candidate_indexes_within_window.popleft()
+            if i >= k - 1:
+                ret.append(nums[max_candidate_indexes_within_window[0]])
+
+        return ret
+
+    def minWindow(self, s, t):
+        """
+        :type s: str
+        :type t: str
+        :rtype: str
+        """
+
+        if not s or not t:
+            return ''
+
+        requires = {}
+        for c in t:
+            if c not in requires:
+                requires[c] = 0
+            requires[c] += 1
+
+        left = 0
+        right = 0
+        key_indexes = []
+        key_i = 0
+        ret = None
+        while right < len(s) or max(requires.values()) <= 0:
+            if max(requires.values()) > 0:
+                # expanding window
+                if s[right] in requires:
+                    key_indexes.append(right)
+                    requires[s[right]] -= 1
+                right += 1
+            else:
+                # shrinking window
+                while max(requires.values()) <= 0:
+                    left = key_indexes[key_i]
+                    key_i += 1
+                    if ret is None or right - left < len(ret):
+                        ret = s[left:right]
+                    requires[s[left]] += 1
+        return ret or ''
+
+    def smallestGoodBase(self, n):
+        import math
+        n = int(n)
+
+        for k in xrange(int(math.log(n, 2)), 1, -1):
+            a = int(n ** k ** -1)  # k√n
+            if (1 - a ** (k + 1)) / (1 - a) == n:  # [a^0 + a^1 + ... + a^k] == n
+                return str(a)
+
+        return str(n - 1)
+
+    def findRadius(self, houses, heaters):
+        """
+        :type houses: List[int]
+        :type heaters: List[int]
+        :rtype: int
+        """
+        heaters.sort()
+        ranges = [0, ]
+        for i in xrange(len(heaters) - 1):
+            ranges.append((heaters[i + 1] + heaters[i]) / 2.0)
+        ranges.append(10 ** 9)
+        def findClosest(pos):
+            i = 0
+            while not (ranges[i] <= pos < ranges[i + 1]):
+                i += 1
+            return heaters[i]
+        return max(abs(findClosest(pos) - pos) for pos in houses)
 
 
 
