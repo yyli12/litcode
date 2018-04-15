@@ -2,6 +2,7 @@ from linked_list import make_list, ListNode
 from tree import *
 from utils import *
 from pprint import pprint
+import heapq
 
 class Solution(object):
     def twoSum(self, nums, target):
@@ -2614,8 +2615,362 @@ class Solution(object):
 
         return partitionString(s, 0, getAllPalindromes(s))
 
+    def canFinish(self, numCourses, prerequisites):
+        """
+        :type numCourses: int
+        :type prerequisites: List[List[int]]
+        :rtype: bool
+        """
+        pre_count = [0] * numCourses
+        pos_table = [[] for _ in xrange(numCourses)]
+        taken = [False] * numCourses
+        for pos, pre in prerequisites:
+            pre_count[pos] += 1
+            pos_table[pre].append(pos)
 
-print Solution().partition('abbabccba')
+        queue = filter(lambda i: pre_count[i] == 0, xrange(numCourses))
+
+        i = 0
+        ret = []
+        while i < len(queue):
+            take_course = queue[i]
+            taken[take_course] = True
+            ret.append(take_course)
+            for course in pos_table[take_course]:
+                pre_count[course] -= 1
+                if pre_count[course] == 0:
+                    queue.append(course)
+            i += 1
+
+        return ret if all(taken) else []
+
+
+    def longestValidParentheses(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+        ps = []
+        stack = []
+        for i, c in enumerate(s):
+            if c == '(':
+                stack.append('(')
+            elif c == ')':
+                j = len(stack) - 1
+                while j >= 0 and stack[j] != '(':
+                    j -= 1
+                if j < 0:
+                    if stack:
+                        ps += stack
+                        stack = []
+                else:
+                    tail = ''
+                    while len(stack) > j:
+                        tail = stack.pop() + tail
+                    tail += ')'
+                    while stack and len(stack[-1]) > 1:
+                        tail = stack.pop() + tail
+                    stack.append(tail)
+        while stack:
+            tail = stack.pop()
+            if len(tail) > 1:
+                ps.append(tail)
+        ret = max(map(len, ps))
+        return ret if ret > 1 else 0
+
+    def findMinHeightTrees(self, n, edges):
+        """
+        :type n: int
+        :type edges: List[List[int]]
+        :rtype: List[int]
+        """
+        linkedList = [[] for _ in xrange(n)]
+        for u, v in edges:
+            linkedList[u].append(v)
+            linkedList[v].append(u)
+
+        def getPath(u):
+            def _path(u, prev, level):
+                next_level = filter(lambda v: v != prev, linkedList[u])
+                if not next_level:
+                    return [u, ]
+                else:
+                    ret = []
+                    for v in next_level:
+                        path = _path(v, u, level + 1)
+                        if len(path) > len(ret):
+                            ret = path
+                    ret.append(u)
+                    return ret
+
+            return _path(u, None, 0)
+
+        path = getPath(0)
+        startOfLongest = path[0]
+        longestPath = getPath(startOfLongest)
+        l = len(longestPath)
+
+        if l & 1:
+            return [longestPath[l / 2], ]
+        else:
+            return [longestPath[l / 2], longestPath[l / 2 - 1]]
+
+    def findPoisonedDuration(self, timeSeries, duration):
+        """
+        :type timeSeries: List[int]
+        :type duration: int
+        :rtype: int
+        """
+        if not timeSeries:
+            return 0
+
+        cumulated = 0
+        start = -1
+        end = -1
+        for t in sorted(timeSeries):
+            if t >= end:
+                cumulated += end - start
+                start = t
+                end = t + duration
+            else:
+                end = t + duration
+        cumulated += end - start
+        return cumulated
+
+    def canPlaceFlowers(self, flowerbed, n):
+        """
+        :type flowerbed: List[int]
+        :type n: int
+        :rtype: bool
+        """
+        i = 0
+        while n and i < len(flowerbed):
+            print i, flowerbed[i]
+            if flowerbed[i]:
+                i += 1
+            else:
+                print i, flowerbed[i-1]
+                if i > 0 and flowerbed[i-1]:
+                    i += 1
+                else:
+                    if i + 1 < len(flowerbed) and not flowerbed[i + 1] or i + 1 == len(flowerbed):
+                        flowerbed[i] = 1
+                        n -= 1
+                    else:
+                        i += 1
+        print flowerbed
+        if n == 0:
+            return True
+        else:
+            return False
+
+    def scheduleCourse(self, courses):
+        """
+        :type courses: List[List[int]]
+        :rtype: int
+        """
+        courses.sort(key=lambda course: course[1])
+        total_time = 0
+        maxheap = []
+        for time, end in courses:
+            if total_time + time <= end:
+                total_time += time
+                heapq.heappush(maxheap, -time)
+            elif maxheap:
+                current_longest = -maxheap[0]
+                if current_longest > time:
+                    total_time = total_time - current_longest + time
+                    heapq.heapreplace(maxheap, -time)
+        return len(maxheap)
+
+    def buildTree(self, preorder, inorder):
+        """
+        :type preorder: List[int]
+        :type inorder: List[int]
+        :rtype: TreeNode
+        """
+
+        def build(preorder, inorder):
+            if inorder:
+                root_val = preorder.pop()
+                root_idx = inorder.index(root_val)
+                left_inorder = inorder[:root_idx]
+                right_inorder = inorder[root_idx + 1:]
+
+                root = TreeNode(root_val)
+                root.left = build(preorder, left_inorder)
+                root.right = build(preorder, right_inorder)
+                return root
+            else:
+                return None
+
+        return build(preorder[::-1], inorder)
+
+    def replaceWords(self, dict, sentence):
+        """
+        :type dict: List[str]
+        :type sentence: str
+        :rtype: str
+        """
+
+        trie = {}
+        def buildTrie(words):
+            for word in words:
+                prefix = trie
+                for c in word:
+                    if c not in prefix:
+                        prefix[c] = {}
+                    prefix = prefix[c]
+                    if prefix.get('#'):
+                        break
+                prefix['#'] = True
+            return trie
+
+        def findRoot(word):
+            prefix = trie
+            ret = ''
+            for c in word:
+                if c not in prefix:
+                    return word
+                else:
+                    ret += c
+                    prefix = prefix[c]
+                    if prefix.get('#'):
+                        return ret
+            return word
+
+        buildTrie(dict)
+        words = sentence.split(' ')
+        return ' '.join(map(findRoot, words))
+
+    def wordBreak(self, s, wordDict):
+        """
+        :type s: str
+        :type wordDict: List[str]
+        :rtype: bool
+        """
+
+        possibleLength = set(map(len, wordDict))
+        wordSet = set(wordDict)
+        canBreak = [False] * (len(s))
+
+        for i in xrange(len(s)):
+            for l in possibleLength:
+                if i - l + 1 == 0:
+                    canBreak[i] = s[i - l + 1:i + 1] in wordSet
+                elif i - l + 1 > 0:
+                    canBreak[i] = s[i - l + 1:i + 1] in wordSet and canBreak[i - l]
+                else:
+                    continue
+                if canBreak[i]:
+                    break
+        return canBreak[-1]
+
+    def wordBreak2(self, s, wordDict):
+        breaks = [None] * (len(s) + 1)
+        wordSet = set(wordDict)
+        def breakWord(start):
+            if start == len(s):
+                return ['']
+            if breaks[start] is None:
+                breaks[start] = [
+                    s[start:j] + (' ' + tail if tail else '')
+                    for j in xrange(start + 1, len(s)+1)
+                    if s[start:j] in wordSet
+                    for tail in breakWord(j)
+                ]
+            return breaks[start]
+        return breakWord(0)
+
+    def wordBreak3(self, s, wordDict):
+        """
+        :type s: str
+        :type wordDict: List[str]
+        :rtype: List[str]
+        """
+
+        possibleLength = set(map(len, wordDict))
+        wordSet = set(wordDict)
+        canBreak = [[] for c in s]
+        memo = dict()
+
+        for i in xrange(len(s)):
+            for l in possibleLength:
+                word = s[i - l + 1:i + 1]
+                if i - l + 1 == 0:
+                    if (i - l + 1, i + 1) not in memo:
+                        memo[(i - l + 1, i + 1)] = word in wordSet
+                    if memo[(i - l + 1, i + 1)]:
+                        canBreak[i].append(word)
+                elif i - l + 1 > 0:
+                    if (i - l + 1, i + 1) not in memo:
+                        memo[(i - l + 1, i + 1)] = word in wordSet
+                    if memo[(i - l + 1, i + 1)]:
+                        for brk in canBreak[i - l]:
+                            canBreak[i].append(brk + ' ' + word)
+                else:
+                    continue
+
+        return canBreak[-1]
+
+    def isPalindrome(self, head):
+        """
+        :type head: ListNode
+        :rtype: bool
+        """
+
+        def reverseList(head):
+            def _recusive(head):
+                if head.next is None:
+                    return head, head
+                n, next = head, head.next
+                n.next = None
+                h, t = _recusive(next)
+                t.next = n
+                return h, n
+            if head is None:
+                return head
+            return _recusive(head)[0]
+
+        if not head or not head.next:
+            return True
+
+        h1 = h2 = head
+        while h2:
+            h2 = h2.next
+            if h2:
+                h2 = h2.next
+                h1 = h1.next
+            else:
+                break
+
+        tail_of_first_part = head
+        while tail_of_first_part.next != h1:
+            tail_of_first_part = tail_of_first_part.next
+        tail_of_first_part.next = None
+
+        H1 = ListNode(0)
+        H1.next = head
+        H2 = ListNode(0)
+        H2.next = reverseList(h1)
+        h1, h2 = H1.next, H2.next
+        while h1 and h2:
+            if h1.val != h2.val:
+                return False
+            else:
+                h1 = h1.next
+                h2 = h2.next
+
+        # recover
+        tail_of_first_part.next = reverseList(H2.next)
+
+        return True
+
+
+
+if __name__ == '__main__':
+    print Solution().isPalindrome(make_list([1,2,3,2,1]))
+    print Solution().isPalindrome(make_list([1,2,3,3,2,1]))
 
 # root = TreeNode(3)
 # root.left = TreeNode(9)
