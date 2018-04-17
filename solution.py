@@ -3082,11 +3082,171 @@ class Solution(object):
             return heaters[i]
         return max(abs(findClosest(pos) - pos) for pos in houses)
 
+    def calculate(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+        numstack = []
+        opstack = []
+
+        num = 0
+        for i in xrange(len(s)):
+            c = s[i]
+            if c.isdigit():
+                num = 10 * num + ord(c) - ord('0')
+            if c in ['+', '-', '*', '/'] or i == len(s) - 1:
+                numstack.append(num)
+                num = 0
+                if opstack and opstack[-1] in ['*', '/']:
+                    op = opstack.pop()
+                    num2 = numstack.pop()
+                    num1 = numstack.pop()
+                    if op == '/':
+                        result = num1 / num2
+                    else:
+                        result = num1 * num2
+                    numstack.append(result)
+                if i != len(s) - 1:
+                    opstack.append(c)
+
+        num1 = numstack[0]
+        for i in xrange(len(opstack)):
+            op = opstack[i]
+            num2 = numstack[i + 1]
+            if op == '+':
+                num1 += num2
+            else:
+                num1 -= num2
+
+        return num1
+
+    def canCompleteCircuit(self, gas, cost):
+        """
+        :type gas: List[int]
+        :type cost: List[int]
+        :rtype: int
+        """
+        n = len(gas)
+        if n <= 0:
+            return -1
+        if n == 1:
+            return 0 if gas[0] >= cost[0] else -1
+
+        n = len(gas)
+        if n <= 0:
+            return -1
+        if n == 1:
+            return 0 if gas[0] >= cost[0] else -1
+
+        remainings = [(cost[i] - gas[i], i) for i in xrange(n)]
+        remainings.sort()
+
+        impossibles = set()
+
+        for remaining, start in remainings:
+            if start in impossibles:
+                continue
+            if remaining > 0:
+                return -1
+            i = start
+            passby = set()
+            g = gas[i] - cost[i]
+            i = (i + 1) % n
+            while g >= 0 and i != start:
+                passby.add(i)
+                g += (gas[i] - cost[i])
+                i = (i + 1) % n
+            if g >= 0 and i == start:
+                return start
+            else:
+                impossibles |= passby
+
+        return -1
+
+    def calculate(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+
+        stack = []
+        left = None
+        op = None
+        num = None
+        i = 0
+        while i < len(s):
+            if s[i].isdigit():
+                num = 0
+                while i < len(s) and s[i].isdigit():
+                    num = 10 * num + ord(s[i]) - ord('0')
+                    i += 1
+                if left is None:
+                    left = num
+                else:
+                    left = left + (num if op == '+' else -num)
+                    op = None
+            elif s[i] in '+-':
+                op = s[i]
+                i += 1
+            elif s[i] == '(':
+                if left is not None:
+                    stack.append((left, op))
+                    left = op = None
+                i += 1
+            elif s[i] == ')':
+                num = left
+                if stack:
+                    left, op = stack.pop()
+                else:
+                    left, op = None, None
+                if left is None:
+                    left = num
+                else:
+                    left = left + (num if op == '+' else -num)
+                    op = None
+                i += 1
+        return left
+
+
+    def lowestCommonAncestor(self, root, p, q):
+        """
+        :type root: TreeNode
+        :type p: TreeNode
+        :type q: TreeNode
+        :rtype: TreeNode
+        """
+        def pathTo(root, leave):
+            if not root:
+                return None
+            else:
+                if root.val == leave:
+                    return [leave, ]
+                else:
+                    l = pathTo(root.left, leave)
+                    r = pathTo(root.right, leave)
+                    if l:
+                        l.append(root.val)
+                        return l
+                    elif r:
+                        r.append(root.val)
+                        return r
+                    return None
+        path_p = pathTo(root, p)[::-1]
+        path_q = pathTo(root, q)[::-1]
+        i = 0
+
+        while i < len(path_q) and i < len(path_p) and path_p[i] == path_q[i]:
+            i += 1
+        return path_p[i-1]
+
+
+
 
 
 if __name__ == '__main__':
-    print Solution().isPalindrome(make_list([1,2,3,2,1]))
-    print Solution().isPalindrome(make_list([1,2,3,3,2,1]))
+	pass
+
 
 # root = TreeNode(3)
 # root.left = TreeNode(9)
