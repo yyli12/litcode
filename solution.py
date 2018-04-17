@@ -3240,12 +3240,90 @@ class Solution(object):
             i += 1
         return path_p[i-1]
 
+    def skyline(self, buildings):
+        key_points = {}
+        def update(k, h):
+            if k not in key_points:
+                key_points[k] = 0
+            key_points[k] = max(key_points[k], h)
 
+        for i in xrange(len(buildings)):
+            building = buildings[i]
+            l, r, h = building
+            update(l, h)
+            update(r, 0)
+            for k in key_points:
+                if l < k < r:
+                    update(k, h)
 
+        for i in xrange(len(buildings)-1, -1, -1):
+            building = buildings[i]
+            l, r, h = building
+            for k in key_points:
+                if l < k < r:
+                    update(k, h)
 
+        prevh = 0
+        ret = []
+        for key in sorted(key_points.keys()):
+            maxh = key_points[key]
+            if maxh != prevh:
+                ret.append([key, maxh])
+                prevh = maxh
+        return ret
+
+    def mySqrt(self, x):
+        """
+        :type x: int
+        :rtype: int
+        """
+        if x == 0:
+            return 0
+        elif 0 < x <= 1:
+            return 1
+        elif 1 < x <= 4:
+            return 2
+
+        l, r = 0, x / 2
+        while l < r:
+            m = (l + r) / 2
+            mm = m * m
+            if mm == x:
+                return m
+            elif mm > x:
+                r = m
+            else:
+                l = m + 1
+        return l
+
+    def evalRPN(self, tokens):
+        """
+        :type tokens: List[str]
+        :rtype: int
+        """
+        ops = {
+            '+': int.__add__,
+            '-': int.__sub__,
+            '*': int.__mul__,
+            '/': lambda a, b: int(1. * a / b),
+        }
+        stack = []
+
+        for token in tokens:
+            if token in ops:
+                n2 = stack.pop()
+                n1 = stack.pop()
+                stack.append(ops[token](n1, n2))
+                print n1, token, n2
+                print stack
+            else:
+                stack.append(int(token))
+                print stack
+        print stack
 
 if __name__ == '__main__':
-	pass
+    print Solution().evalRPN(["10","6","9","3","+","-11","*","/","*","17","+","5","+"])
+    # print Solution().evalRPN(["15", "7", "1", "1", "+", "-", "/", "3", "*", "2", "1", "1", "+", "+", "-"])
 
 
 # root = TreeNode(3)
