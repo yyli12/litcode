@@ -3321,8 +3321,59 @@ class Solution(object):
                 print stack
         print stack
 
+
+    def largestRectangleArea(self, heights):
+        """
+        :type heights: List[int]
+        :rtype: int
+        """
+        l, r = 0, len(heights) - 1
+        ret = 0
+        while l <= r:
+            print heights[l:r+1],
+            ret = max(ret, (r - l + 1) * min(heights[l:r+1]))
+            print ret
+            if heights[r] > heights[l]:
+                l += 1
+            else:
+                r -= 1
+        return ret
+
+    def isPalindrome2(self, s):
+        """
+        :type s: str
+        :rtype: bool
+        """
+        pass
+
+    def coinChange(self, coins, amount):
+        """
+        :type coins: List[int]
+        :type amount: int
+        :rtype: int
+        """
+
+        if amount == 0:
+            return 0
+
+        count = [None] * (1 + amount)
+        for coin in coins:
+            if coin <= amount:
+                count[coin] = 1
+
+        for i in xrange(1 + amount):
+            if count[i] is not None:
+                for coin in coins:
+                    newi = i + coin
+                    if newi <= amount:
+                        newcount = count[i] + 1
+                        if count[newi] is None or count[newi] > newcount:
+                            count[newi] = newcount
+        return count[-1] if count[-1] else -1
+
+
 if __name__ == '__main__':
-    print Solution().evalRPN(["10","6","9","3","+","-11","*","/","*","17","+","5","+"])
+    print Solution().coinChange([186,419,83,408], 6249)
     # print Solution().evalRPN(["15", "7", "1", "1", "+", "-", "/", "3", "*", "2", "1", "1", "+", "+", "-"])
 
 
