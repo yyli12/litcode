@@ -3240,38 +3240,6 @@ class Solution(object):
             i += 1
         return path_p[i-1]
 
-    def skyline(self, buildings):
-        key_points = {}
-        def update(k, h):
-            if k not in key_points:
-                key_points[k] = 0
-            key_points[k] = max(key_points[k], h)
-
-        for i in xrange(len(buildings)):
-            building = buildings[i]
-            l, r, h = building
-            update(l, h)
-            update(r, 0)
-            for k in key_points:
-                if l < k < r:
-                    update(k, h)
-
-        for i in xrange(len(buildings)-1, -1, -1):
-            building = buildings[i]
-            l, r, h = building
-            for k in key_points:
-                if l < k < r:
-                    update(k, h)
-
-        prevh = 0
-        ret = []
-        for key in sorted(key_points.keys()):
-            maxh = key_points[key]
-            if maxh != prevh:
-                ret.append([key, maxh])
-                prevh = maxh
-        return ret
-
     def mySqrt(self, x):
         """
         :type x: int
@@ -3371,9 +3339,36 @@ class Solution(object):
                             count[newi] = newcount
         return count[-1] if count[-1] else -1
 
+    def getSkyline(self, buildings):
+        import bisect
+        index = [[-1, 0], ]
+
+        for L, R, H in buildings:
+            end = bisect.bisect_left(index, [R, ])
+            original_end = index[end-1][1]
+            start = bisect.bisect_left(index, [L, ])
+            if start >= len(index) or index[start][0] != L:
+                index.insert(start, [L, index[start-1][1]])
+                end += 1
+            if end >= len(index) or index[end][0] != R:
+                index.insert(end, [R, original_end])
+            for i in xrange(start, end):
+                if i == start:
+                    index[i][1] = max(H, index[i][1])
+                elif index[i][1] < H:
+                    index[i][1] = H
+
+        ret = []
+        for item in index[1:]:
+            if not ret or item[1] != ret[-1][1]:
+                ret.append(item)
+        return ret
+
 
 if __name__ == '__main__':
-    print Solution().coinChange([186,419,83,408], 6249)
+    # print Solution().getSkyline([[6765,184288,53874],[13769,607194,451649],[43325,568099,982005],[47356,933141,123943],[59810,561434,119381],[75382,594625,738524],[111895,617442,587304],[143767,869128,471633],[195676,285251,107127],[218793,772827,229219],[316837,802148,899966],[329669,790525,416754],[364886,882642,535852],[368825,651379,6209],[382318,992082,300642],[397203,478094,436894],[436174,442141,612149],[502967,704582,918199],[503084,561197,625737],[533311,958802,705998],[565945,674881,149834],[615397,704261,746064],[624917,909316,831007],[788731,924868,633726],[791965,912123,438310]])
+    # print Solution().getSkyline([[3,10,20],[3,9,19],[3,8,18],[3,7,17],[3,6,16],[3,5,15],[3,4,14]])
+    print Solution().getSkyline([ [2, 9, 10], [3, 7, 15], [5 ,12 ,12], [15 ,20, 10], [19, 24 ,8] ])
     # print Solution().evalRPN(["15", "7", "1", "1", "+", "-", "/", "3", "*", "2", "1", "1", "+", "+", "-"])
 
 
