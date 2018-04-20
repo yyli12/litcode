@@ -4,6 +4,7 @@ from tree import *
 from utils import *
 from pprint import pprint
 import heapq
+import bisect
 
 class Solution(object):
     def twoSum(self, nums, target):
@@ -3312,7 +3313,20 @@ class Solution(object):
         :type s: str
         :rtype: bool
         """
-        pass
+        l, r = 0, len(s) - 1
+        while l < r:
+            if not s[l].isalnum():
+                l += 1
+                continue
+            if not s[r].isalnum():
+                r -= 1
+                continue
+            if s[l].lower() != s[r].lower():
+                return False
+            else:
+                l += 1
+                r -= 1
+        return True
 
     def coinChange(self, coins, amount):
         """
@@ -3364,12 +3378,172 @@ class Solution(object):
                 ret.append(item)
         return ret
 
+    def exist(self, board, word):
+        """
+        :type board: List[List[str]]
+        :type word: str
+        :rtype: bool
+        """
+        R = len(board)
+        if not R:
+            return word == ''
+        C = len(board[0])
+        if not C:
+            return word == ''
+
+        def dfs(r, c, word):
+            if not word:
+                return True
+            if not (0 <= r < R) or not (0 <= c < C):
+                return False
+            if board[r][c] != word[0]:
+                return False
+            board[r][c] = None
+            remaining = word[1:]
+            if dfs(r - 1, c, remaining):
+                return True
+            if dfs(r + 1, c, remaining):
+                return True
+            if dfs(r, c - 1, remaining):
+                return True
+            if dfs(r, c + 1, remaining):
+                return True
+            board[r][c] = word[0]
+            return False
+
+        for r in xrange(R):
+            for c in xrange(C):
+                if dfs(r, c, word):
+                    return True
+        return False
+
+    def spiralOrder(self, matrix):
+        """
+        :type matrix: List[List[int]]
+        :rtype: List[int]
+        """
+        if not matrix:
+            return []
+
+        def nextdirection(curdir):
+            return {
+                +1: +2,
+                +2: -1,
+                -1: -2,
+                -2: +1,
+            }[curdir]
+
+        def nextstep(curdir):
+            return {
+                +1: (lambda (r, c): (r, c + 1)),
+                +2: (lambda (r, c): (r + 1, c)),
+                -1: (lambda (r, c): (r, c - 1)),
+                -2: (lambda (r, c): (r - 1, c)),
+            }[curdir]
+
+        maxstep = [0, len(matrix[0]), len(matrix)]
+        direction = +1
+        point = (0, -1)
+        ret = []
+        step = 1
+        while step:
+            absdir = abs(direction)
+            step = maxstep[absdir]
+            maxstep[2 if absdir == 1 else 1] -= 1
+            nextfunc = nextstep(direction)
+            for _ in xrange(step):
+                point = r, c = nextfunc(point)
+                ret.append(matrix[r][c])
+
+            direction = nextdirection(direction)
+        return ret
+
+
+    def maxPathSum(self, root):
+        """
+        :type root: TreeNode
+        :rtype: int
+        """
+        def maxPathFromRoot(root):
+            if not root:
+                return 0
+            if not hasattr(root, 'mfr'):
+                l = maxPathFromRoot(root.left)
+                r = maxPathFromRoot(root.right)
+                ret = max(l, r, 0) + root.val
+                setattr(root, 'mfr', ret)
+
+            return root.mfr
+
+        def maxPathAnyway(root):
+
+            if root.left and root.right:
+                return max(
+                    maxPathAnyway(root.left),
+                    maxPathAnyway(root.right),
+                    maxPathFromRoot(root.left) + maxPathFromRoot(root.right) + root.val
+                )
+            elif not root.left and root.right:
+                return max(
+                    maxPathAnyway(root.right),
+                    maxPathFromRoot(root.right) + root.val,
+                )
+            elif root.left and not root.right:
+                return max(
+                    maxPathAnyway(root.left),
+                    maxPathFromRoot(root.left) + root.val,
+                )
+            else:
+                return root.val
+
+        return maxPathAnyway(root)
+
+    def largestNumber(self, nums):
+
+        def compare(n1, n2):
+            num1 = int(str(n1) + str(n2))
+            num2 = int(str(n2) + str(n1))
+            if num1 > num2:
+                return 1
+            elif num1 < num2:
+                return -1
+            else:
+                return 0
+
+        nums.sort(cmp=compare, reverse=True)
+
+        return ''.join(map(str, nums))
+
+    def numDecodings(self, s):
+        """
+        :type s: str
+        :rtype: int
+        """
+        memo = dict()
+
+        def decode(s):
+            if s in memo:
+                return memo[s]
+            if not s:
+                return 1
+            if s == 1:
+                return 1 if s != '0' else 0
+            if s[0] == '0':
+                return 0
+            else:
+                ret = decode(s[1:])
+                if len(s) >= 2:
+                    if 10 <= int(s[:2]) <= 26:
+                        ret += decode(s[2:])
+                memo[s] = ret
+                return ret
+        return decode(s)
+
+
+
 
 if __name__ == '__main__':
-    # print Solution().getSkyline([[6765,184288,53874],[13769,607194,451649],[43325,568099,982005],[47356,933141,123943],[59810,561434,119381],[75382,594625,738524],[111895,617442,587304],[143767,869128,471633],[195676,285251,107127],[218793,772827,229219],[316837,802148,899966],[329669,790525,416754],[364886,882642,535852],[368825,651379,6209],[382318,992082,300642],[397203,478094,436894],[436174,442141,612149],[502967,704582,918199],[503084,561197,625737],[533311,958802,705998],[565945,674881,149834],[615397,704261,746064],[624917,909316,831007],[788731,924868,633726],[791965,912123,438310]])
-    # print Solution().getSkyline([[3,10,20],[3,9,19],[3,8,18],[3,7,17],[3,6,16],[3,5,15],[3,4,14]])
-    print Solution().getSkyline([ [2, 9, 10], [3, 7, 15], [5 ,12 ,12], [15 ,20, 10], [19, 24 ,8] ])
-    # print Solution().evalRPN(["15", "7", "1", "1", "+", "-", "/", "3", "*", "2", "1", "1", "+", "+", "-"])
+    print Solution().numDecodings('226')
 
 
 # root = TreeNode(3)
@@ -3378,5 +3552,3 @@ if __name__ == '__main__':
 # root.left.right = TreeNode(2)
 # root.right.right = TreeNode(7)
 
-
-# print Solution().deserialize(Solution().serialize(root))
