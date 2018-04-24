@@ -3296,17 +3296,45 @@ class Solution(object):
         :type heights: List[int]
         :rtype: int
         """
-        l, r = 0, len(heights) - 1
+        n = len(heights)
+        lowerLeft = [-1] * n
+        lowerRight = [n] * n
+
+        for i in xrange(1, n):
+            j = i - 1
+            while j >= 0 and heights[j] >= heights[i]:
+                j = lowerLeft[j]
+            lowerLeft[i] = j
+
+        for i in xrange(n-2, -1, -1):
+            j = i + 1
+            while j < n and heights[j] >= heights[i]:
+                j = lowerRight[j]
+            lowerRight[i] = j
+
         ret = 0
-        while l <= r:
-            print heights[l:r+1],
-            ret = max(ret, (r - l + 1) * min(heights[l:r+1]))
-            print ret
-            if heights[r] > heights[l]:
-                l += 1
-            else:
-                r -= 1
+        for i in xrange(n):
+            ret = max(ret, (lowerRight[i] - lowerLeft[i] - 1) * heights[i])
         return ret
+
+    def largestRectangleArea2(self, height):
+        height.append(0)
+        # a guard to guarantee all height in stack pop out
+        stack = [-1]
+        # a guard to guarantee stack never empty
+        ans = 0
+        for i in xrange(len(height)):
+            # stack would be ascending
+            while height[i] < height[stack[-1]]:
+                # previous higher is never use again, as current one is lower!
+                h = height[stack.pop()]
+                w = i - stack[-1] - 1
+                print h, w
+                ans = max(ans, h * w)
+            print '--'
+            stack.append(i)
+
+        return ans
 
     def isPalindrome2(self, s):
         """
@@ -3540,15 +3568,233 @@ class Solution(object):
         return decode(s)
 
 
+    def ladderLength(self, beginWord, endWord, wordList):
+        """
+        :type beginWord: str
+        :type endWord: str
+        :type wordList: List[str]
+        :rtype: int
+        """
+        allChar = 'qazwsxedcrfvtgbyhnujmkiolp'
+        lenWord = len(beginWord)
+        wordSet = set(wordList)
 
+        memo = {}
+        def allDiffOne(word):
+            if word not in memo:
+                ret = set()
+                for i in xrange(lenWord):
+                    for c in allChar:
+                        if c != word[i]:
+                            ret.add(word[:i] + c + word[i+1:])
+                memo[word] = ret
+            return memo[word]
+
+        if endWord not in wordSet:
+            return []
+
+        forward = [[beginWord, ]]
+        forwardSet = {beginWord, }
+        backward = [[endWord, ]]
+        backwardSet = {endWord, }
+
+        while forward:
+            if forwardSet & backwardSet:
+                break
+
+            if len(forward) > len(backward):
+                forward, forwardSet, backward, backwardSet = backward, backwardSet, forward, forwardSet
+
+            wordSet -= forwardSet
+            newForward = []
+            newForwardSet = set()
+            for p in forward:
+                for word in allDiffOne(p[-1]) & wordSet:
+                    newForwardSet.add(word)
+                    newForward.append(p + [word, ])
+
+            forward, forwardSet = newForward, newForwardSet
+
+        if not forward or not backward:
+            return []
+        if forward[0][0] != beginWord:
+            forward, backward = backward, forward
+
+        ret = []
+        for p2 in backward:
+            tail = p2[:-1][::-1]
+            for p1 in forward:
+                if p1[-1] == p2[-1]:
+                    ret.append(p1 + tail)
+        return ret
+
+    def threeSum(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: List[List[int]]
+        """
+
+        nums.sort()
+
+        k = len(nums) - 1
+        lastLargest = None
+        ret = []
+        while k >= 0 and nums[k] >= 0:
+            if lastLargest == nums[k]:
+                k -= 1
+                continue
+            else:
+                lastLargest = nums[k]
+            i, j = 0, k - 1
+            target = - nums[k]
+            while i < j and nums[i] < 0:
+                if nums[i] + nums[j] == target:
+                    new = [nums[i], nums[j], nums[k]]
+                    if not ret or ret[-1] != new:
+                        ret.append(new)
+                    i += 1
+                elif nums[i] + nums[j] > target:
+                    j -= 1
+                else:
+                    i += 1
+        return ret
+
+    def maxPoints(self, points):
+        """
+        :type points: List[Point]
+        :rtype: int
+        """
+        n = len(points)
+        if n <= 1:
+            return n
+
+        ret = 0
+        for i in xrange(n):
+            pi = points[i]
+            count = {'inf': 1}
+            same = 0
+            count['inf'] = 1
+            for j in xrange(i+1, n):
+                pj = points[j]
+                if pi.x == pj.x:
+                    if pi.y == pj.y:
+                        same += 1
+                        continue
+                    else:
+                        count['inf'] += 1
+                else:
+                    k = 1.0 * (pj.y - pi.y) / (pj.x - pi.x)
+                    if k not in count: count[k] = 1
+                    count[k] += 1
+            kmax = max(count.values()) if count else 0
+            print count
+            ret = max(ret, kmax + same)
+        return ret
+
+    def maxPoints2(self, points):
+        l = len(points)
+        m = 0
+        for i in range(l):
+            dic = {'i': 1}
+            same = 0
+            for j in range(i+1, l):
+                tx, ty = points[j].x, points[j].y
+                if tx == points[i].x and ty == points[i].y:
+                    same += 1
+                    continue
+                if points[i].x == tx: slope = 'i'
+                else:slope = (points[i].y-ty) * 1.0 /(points[i].x-tx)
+                if slope not in dic: dic[slope] = 1
+                dic[slope] += 1
+            print dic
+            m = max(m, max(dic.values()) + same)
+
+        return m
+
+    def isMatch(self, s, p):
+        """
+        :type s: str
+        :type p: str
+        :rtype: bool
+        """
+        patterns = []
+        stars = set()
+        for i in xrange(len(p)):
+            if p[i] == '*':
+                stars.add(len(patterns) - 1)
+            else:
+                patterns.append(p[i])
+
+        i, j = 0, 0
+        while i < len(s) and j < len(patterns):
+            if s[i] == patterns[j]:
+                i += 1
+                if j not in stars:
+                    j += 1
+            else:
+                pass
+
+            return False
+
+        if i < len(s) or j < len(patterns):
+            return False
+
+        return True
+
+    def myAtoi(self, str):
+        """
+        :type str: str
+        :rtype: int
+        """
+        str = str.strip()
+        if not str:
+            return 0
+        sign = +1
+        if str[0] == '+' or str[0] == '-':
+            sign = int(str[0] + '1')
+            str = str[1:]
+        absnum = 0
+        for c in str:
+            if c.isdigit():
+                absnum = 10 * absnum + ord(c) - ord('0')
+            else:
+                break
+        num = sign * absnum
+        if num < - 2 ** 31:
+            return - 2 ** 31
+        elif num > 2 ** 31 - 1:
+            return 2 ** 31 - 1
+        return num
+
+    def wiggleSort(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: void Do not return anything, modify nums in-place instead.
+        """
+        n = len(nums)
+        if n <= 1:
+            return
+        nums.sort()
+
+        result = [0] * n
+        half = (n - 1) / 2
+        i = half
+        x = 0
+        while i >= 0:
+            result[x] = nums[i]
+            x += 2
+            i -= 1
+
+        j = half + 1
+        x = 1
+        while j < n:
+            result[x] = nums[j]
+            x += 2
+            j += 1
+
+        nums[:] = result
+
+        print nums
 
 if __name__ == '__main__':
-    print Solution().numDecodings('226')
-
-
-# root = TreeNode(3)
-# root.left = TreeNode(9)
-# root.right = TreeNode(20)
-# root.left.right = TreeNode(2)
-# root.right.right = TreeNode(7)
-
+    print Solution().largestRectangleArea2([2,1,5,6,2,3])
