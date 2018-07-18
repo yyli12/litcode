@@ -3796,5 +3796,115 @@ class Solution(object):
 
         print nums
 
+    def advantageCount(self, A, B):
+        """
+        :type A: List[int]
+        :type B: List[int]
+        :rtype: List[int]
+        """
+        sorted_B = sorted((num, index) for index, num in enumerate(B))
+        sorted_A = sorted(A)
+        N = len(A)
+
+        ret = [None] * N
+        index_of_sA = 0
+        for num, index_of_ret in sorted_B:
+            while index_of_sA < N and sorted_A[index_of_sA] <= num:
+                index_of_sA += 1
+
+            if index_of_sA >= N:
+                break
+            else:
+                ret[index_of_ret] = sorted_A[index_of_sA]
+                sorted_A[index_of_sA] = None
+                index_of_sA += 1
+
+        none_indexes_of_ret = [i for i in xrange(N) if ret[i] is None]
+        not_none_of_sA = [num for num in sorted_A if num is not None]
+        for index, i in enumerate(none_indexes_of_ret):
+            ret[i] = not_none_of_sA[index]
+
+        return ret
+
+    def minRefuelStops(self, target, startFuel, stations):
+        """
+        :type target: int
+        :type startFuel: int
+        :type stations: List[List[int]]
+        :rtype: int
+        """
+
+        def minFrom(curPos, curFuel, target, prevStop):
+            if curPos + curFuel >= target:
+                return prevStop
+            else:
+                availStations = sorted(filter(lambda station: curPos < station[0] <= curPos + curFuel, stations), key=lambda station: -station[1])
+
+                if not availStations:
+                    return -1
+                ret = 999999
+                for pos, fuel in availStations:
+                    f = curFuel + fuel - (pos - curPos)
+                    p = pos
+                    t = minFrom(p, f, target, prevStop + 1)
+                    if t >= 0 and t < ret:
+                        ret = t
+                if ret == 999999:
+                    return -1
+                else:
+                    return ret
+
+        return minFrom(0, startFuel, target, 0)
+
+    def primePalindrome(self, N):
+        """
+        :type N: int
+        :rtype: int
+        """
+        if N <= 2:
+            return 2
+
+        def isPrime(num):
+            if num == 3:
+                return True
+            for i in xrange(3, num, 2):
+                if i * i > num:
+                    return True
+                if num % i == 0:
+                    return False
+
+        def isPal(n):
+            if n % 10 == 0 and n != 0:
+                return False
+            n1 = 0
+            while n > n1:
+                n1 = 10 * n1 + n % 10
+                n /= 10
+            return n1 == n or n == n1 / 10
+
+        if N % 2 == 0:
+            N += 1
+
+        for i in xrange(N, 2 * 10 ** 8, 2):
+            if isPal(i):
+                if isPrime(i):
+                    return i
+
+    def lengthOfLIS2(self, nums):
+        """
+        :type nums: List[int]
+        :rtype: int
+        """
+        from bisect import bisect_left
+        tail = []
+        for num in nums:
+            pos = bisect_left(tail, num)
+            if pos == len(tail):
+                tail.append(num)
+            else:
+                tail[pos] = num
+            print num, tail
+        return len(tail)
+
 if __name__ == '__main__':
-    print Solution().largestRectangleArea2([2,1,5,6,2,3])
+    print Solution().lengthOfLIS2([1,3,6,7,9,4,10,5,6])
